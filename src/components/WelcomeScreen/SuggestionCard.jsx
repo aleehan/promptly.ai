@@ -4,10 +4,11 @@ const SuggestionCard = (props) => {
         icon,
         title,
         text,
+        onClick,
     } = props
 
     return (
-            <button className="chat_first_message_suggestions_item suggestions_button">
+            <button className="chat_first_message_suggestions_item suggestions_button" onClick={onClick}>
                 <img
                     src={icon}
                     alt={title}

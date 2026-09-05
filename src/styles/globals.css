@@ -207,7 +207,7 @@ p:not([class]):not(:last-child) {
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: 12px 208px;
+    padding: 12px 208px 40px;
     border-top: var(--divider-border);
     background-color: var(--color-white);
 }
@@ -315,6 +315,15 @@ p:not([class]):not(:last-child) {
 
 .message[data-role="assistant"] .message-bubble_timestamp {
     display: none;
+}
+
+.chat_messages {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    row-gap: 16px;
 }
 
 
