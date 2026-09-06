@@ -53,7 +53,7 @@ const App = () => {
               <WelcomeScreen onSuggestionClick={handleSendMessage} />
           )}
 
-        <Footer />
+        <Footer onSend={handleSendMessage} />
       </>
   )
 }

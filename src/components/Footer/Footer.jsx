@@ -1,11 +1,15 @@
 import FooterChatInput from "./FooterChatInput.jsx";
 import FooterInputHint from "./FooterInputHint.jsx";
 
-const Footer = () => {
+const Footer = (props) => {
+    const {
+        onSend,
+    } = props;
+
     return (
         <footer className="footer-input">
             <form className="footer-input_chat" id="footer-input_chat_main">
-                <FooterChatInput></FooterChatInput>
+                <FooterChatInput onSend={onSend}></FooterChatInput>
                 <FooterInputHint></FooterInputHint>
             </form>
         </footer>

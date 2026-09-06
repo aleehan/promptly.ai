@@ -202,6 +202,16 @@ p:not([class]):not(:last-child) {
     color: var(--color-dark-gray);
 }
 
+.chat_messages {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: none;
+    row-gap: 16px;
+}
+
 .footer-input {
     display: flex;
     align-items: center;
@@ -234,11 +244,12 @@ p:not([class]):not(:last-child) {
 .footer-input_chat_main_text {
     width: 100%;
     font-size: 14px;
-    color: #94A3B8;
+    color: #000000;
     flex: 1 1 auto;
     min-width: 0;
     resize: none;
-    overflow-y: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
     max-height: 200px;
     line-height: 1.4;
     transition: height 0.1s ease;
@@ -247,11 +258,16 @@ p:not([class]):not(:last-child) {
     padding: 8px 0;
 }
 
+.footer-input_chat_main_pin {
+    margin-top: auto;
+}
+
 .footer-input_chat_main_voice_and_send {
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: row;
+    margin-top: auto;
 }
 
 .button-input {
@@ -315,15 +331,6 @@ p:not([class]):not(:last-child) {
 
 .message[data-role="assistant"] .message-bubble_timestamp {
     display: none;
-}
-
-.chat_messages {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    row-gap: 16px;
 }
 
 
