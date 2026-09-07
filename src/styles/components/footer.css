@@ -1,0 +1,105 @@
+.footer-input {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 12px 208px 40px;
+    border-top: var(--divider-border);
+    background-color: var(--color-white);
+}
+
+.footer-input_chat {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 768px;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    padding-inline: 12px;
+    padding-block: 4px;
+    row-gap: 8px;
+    background-color: #ffffff;
+}
+
+.footer-input_chat_main {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.footer-input_chat_main_text {
+    width: 100%;
+    font-size: 14px;
+    color: #000000;
+    flex: 1 1 auto;
+    min-width: 0;
+    resize: none;
+    overflow-y: auto;
+    scrollbar-width: none;
+    max-height: 200px;
+    line-height: 1.4;
+    transition: height 0.1s ease;
+    border: none;
+    outline: none;
+    padding: 4px 0 0 0;
+}
+
+.footer-input_chat_main_pin {
+    margin-top: auto;
+}
+
+.footer-input_chat_main_voice_and_send {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    margin-top: auto;
+}
+
+.button-input {
+    border: none;
+    background-color: transparent;
+}
+
+.footer-input_chat_title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+    font-size: 10px;
+}
+
+/* components/footer.css */
+
+@media (max-width: 900px) {
+    .footer-input {
+        padding-inline: 120px;   /* убираем гигантские боковые поля */
+    }
+}
+
+@media (max-width: 512px) {
+    .footer-input_chat_main_pin_icon {
+        width: 50px;
+    }
+    .footer-input_chat_main_send_icon {
+        width: 55px;
+    }
+    .footer-input_chat_main_voice_icon {
+        width: 50px;
+    }
+}
+
+@media (max-width: 600px) {
+    .footer-input {
+        padding-inline: 70px;   /* ещё уже — под самые маленькие экраны */
+    }
+
+    .footer-input_chat_title {
+        flex-direction: column;  /* строки друг под другом вместо друг рядом с другом */
+        align-items: flex-start;
+        row-gap: 4px;
+    }
+    .footer-input_chat_main_voice_icon {
+        width: 40px;
+    }
+}

@@ -1,6 +1,10 @@
+import './normalize.css'
+import './variables.css'
 import './fonts.css'
 import './globals.css'
-import './normalize.css'
 import './utils.css'
-import './variables.css'
 
+import './components/header.css'
+import './components/chat.css'
+import './components/footer.css'
+import './components/message.css'
