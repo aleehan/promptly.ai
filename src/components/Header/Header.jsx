@@ -1,11 +1,19 @@
 import HeaderTitle from "./HeaderTitle.jsx";
 import HeaderButtons from "./HeaderButtons.jsx";
 
-const Header = () => {
+const Header = (props) => {
+
+    const {
+        updatedHeaderTitle,
+        clearActiveChat,
+        updatedChatIcon,
+    } = props;
+
+
     return (
         <header className="header">
-            <HeaderTitle/>
-            <HeaderButtons/>
+            <HeaderTitle updatedHeaderTitle={updatedHeaderTitle} updatedChatIcon={updatedChatIcon} />
+            <HeaderButtons onClear={clearActiveChat}/>
         </header>
     )
 }

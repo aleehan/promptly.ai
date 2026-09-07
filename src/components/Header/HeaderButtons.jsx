@@ -2,7 +2,11 @@ import chooseModelIcon from "../../assets/icons/model_button_more.svg"
 import ClearChatIcon from "../../assets/icons/button_clear.svg"
 import learnMoreIcon from "../../assets/icons/more.svg"
 
-const HeaderButtons = () => {
+const HeaderButtons = (props) => {
+    const {
+        onClear,
+    } = props;
+
     return (
         <div className="header-buttons">
             <button className="header-buttons_model button">
@@ -11,7 +15,7 @@ const HeaderButtons = () => {
                 <img src={chooseModelIcon} alt="Choose the model"
                      className="header-buttons_model_more"/>
             </button>
-            <button className="header-buttons_clear button">
+            <button className="header-buttons_clear button" onClick={onClear}>
                 <img src={ClearChatIcon} alt="Clear the chat"
                      className="header-buttons_clear_icon"/>
                 Clear
