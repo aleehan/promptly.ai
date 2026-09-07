@@ -47,3 +47,15 @@
 .message[data-role="assistant"] .message-bubble_timestamp {
     display: none;
 }
+
+@media (max-width: 1300px) {
+    .message {
+        margin-inline: 70px;
+    }
+}
+
+@media (max-width: 800px) {
+    .message {
+        margin-inline: 40px;
+    }
+}
