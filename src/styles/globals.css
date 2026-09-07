@@ -145,6 +145,7 @@ p:not([class]):not(:last-child) {
     padding: 50px 304px;
     row-gap: 24px;
     overflow-y: auto;
+    scrollbar-width: none;
     min-height: 0;
 }
 
