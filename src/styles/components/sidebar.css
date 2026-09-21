@@ -1,0 +1,204 @@
+.sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    border-right: var(--divider-border);
+    padding: 20px 16px;
+    background-color: var(--color-white);
+}
+
+/* --- Brand --- */
+
+.sidebar_brand {
+    display: flex;
+    align-items: center;
+    column-gap: 10px;
+    margin-bottom: 20px;
+}
+
+.sidebar_brand_logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background-color: #4ADE80; /* акцентный зелёный — стоит добавить как --color-accent в variables.css */
+}
+
+.sidebar_brand_title {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--color-dark);
+}
+
+/* --- New Chat button --- */
+
+.sidebar_new_chat {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    column-gap: 8px;
+    color: var(--color-white);
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 24px;
+    background-color: var(--color-dark);
+
+}
+
+/* --- Conversations --- */
+
+.sidebar_conversations {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    row-gap: 8px;
+}
+
+.sidebar_conversations_label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--color-dark-gray);
+    padding-inline: 4px;
+    margin-bottom: 4px;
+}
+
+.sidebar_conversations_list {
+    display: flex;
+    flex-direction: column;
+    row-gap: 4px;
+    overflow-y: auto;
+}
+
+.sidebar_item {
+    display: flex;
+    flex-direction: column;
+    row-gap: 4px;
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    border: 0.8px solid transparent;
+    border-radius: 12px;
+    background-color: transparent;
+}
+
+.sidebar_item:hover {
+    background-color: var(--color-white);
+    border: 0.8px solid green;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.sidebar_item--active {
+    background-color: var(--color-white);
+    border: var(--divider-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.sidebar_item_top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    column-gap: 8px;
+}
+
+.sidebar_item_title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar_item_time {
+    font-size: 11px;
+    color: var(--color-dark-gray);
+    flex-shrink: 0;
+}
+
+.sidebar_item_subtitle {
+    font-size: 12px;
+    color: var(--color-dark-gray);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- Footer --- */
+
+.sidebar_footer {
+    display: flex;
+    flex-direction: column;
+    row-gap: 12px;
+    padding-top: 16px;
+    border-top: var(--divider-border);
+}
+
+.sidebar_footer_toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    border: var(--divider-border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    background-color: transparent;
+}
+
+.sidebar_footer_toggle_label {
+    display: flex;
+    align-items: center;
+    column-gap: 8px;
+    font-size: 13px;
+    color: var(--color-dark);
+}
+
+.sidebar_footer_toggle_action {
+    font-size: 12px;
+    color: var(--color-dark-gray);
+}
+
+.sidebar_footer_profile {
+    display: flex;
+    align-items: center;
+    column-gap: 10px;
+    padding-inline: 4px;
+}
+
+.sidebar_footer_profile_avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--color-light-gray);
+    flex-shrink: 0;
+}
+
+.sidebar_footer_profile_info {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.sidebar_footer_profile_name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-dark);
+}
+
+.sidebar_footer_profile_email {
+    font-size: 11px;
+    color: var(--color-dark-gray);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

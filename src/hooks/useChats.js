@@ -114,6 +114,12 @@ const useChats = () => {
         setUpdateHeaderTitle('New Chat');
     }, []);
 
+    const selectChat = useCallback((chatId) => {
+        setActiveChatId(chatId);
+        const chat = chats.find((chat) => chat.id === chatId);
+        setUpdateHeaderTitle(chat ? chat.title : "New Chat");
+    }, [chats])
+
     return {
         chats,
         activeChat,
@@ -123,6 +129,7 @@ const useChats = () => {
         clearActiveChat,
         updatedHeaderTitle,
         updatedChatIcon,
+        selectChat
     };
 }
 

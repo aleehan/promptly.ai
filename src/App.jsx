@@ -3,22 +3,32 @@ import Footer from "./components/Footer/Footer.jsx";
 import WelcomeScreen from "./components/WelcomeScreen/WelcomeScreen.jsx";
 import MessageList from "./components/Chat/MessageList.jsx";
 import useChats from "./hooks/useChats.js";
+import Sidebar from "./components/Sidebar/Sidebar.jsx";
 
 const App = () => {
 
-    const { activeChat, sendMessage, updatedHeaderTitle, clearActiveChat, updatedChatIcon } = useChats()
+    const { chats, activeChat, activeChatId, sendMessage, updatedHeaderTitle, clearActiveChat, updatedChatIcon, selectChat } = useChats()
     return (
-        <>
-            <Header updatedHeaderTitle={updatedHeaderTitle} clearActiveChat={clearActiveChat} updatedChatIcon={updatedChatIcon}/>
+        <div className="app-layout">
+            <Sidebar
+                chats={chats}
+                activeChatId={activeChatId}
+                onSelectChat={selectChat}
+                onNewChat={clearActiveChat}
+            />
+            <div className="app-main">
+                <Header updatedHeaderTitle={updatedHeaderTitle} clearActiveChat={clearActiveChat} updatedChatIcon={updatedChatIcon}/>
 
-            {activeChat ? (
-                <MessageList messages={activeChat.messages} />
-            ) : (
-                <WelcomeScreen onSuggestionClick={sendMessage} />
-            )}
+                {activeChat ? (
+                    <MessageList messages={activeChat.messages} />
+                ) : (
+                    <WelcomeScreen onSuggestionClick={sendMessage} />
+                )}
 
-            <Footer onSend={sendMessage} />
-        </>
+                <Footer onSend={sendMessage} />
+            </div>
+        </div>
+
     )
 }
 

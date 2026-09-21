@@ -64,3 +64,16 @@ p:not([class]):not(:last-child) {
 .footer-input {
     flex-shrink: 0;
 }
+
+.app-layout {
+    display: flex;
+    flex-direction: row;
+    min-height: 100vh;
+}
+
+.app-main {
+    display: flex;
+    flex-direction: column;  /* вертикально: header/main/footer друг под другом, как раньше */
+    flex: 1 1 auto;
+    min-height: 0;
+}
