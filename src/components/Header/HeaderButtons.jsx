@@ -4,7 +4,8 @@ import learnMoreIcon from "../../assets/icons/more.svg"
 
 const HeaderButtons = (props) => {
     const {
-        onClear,
+        onDelete,
+        activeChatId,
     } = props;
 
     return (
@@ -15,7 +16,7 @@ const HeaderButtons = (props) => {
                 <img src={chooseModelIcon} alt="Choose the model"
                      className="header-buttons_model_more"/>
             </button>
-            <button className="header-buttons_clear button" onClick={onClear}>
+            <button className="header-buttons_clear button" onClick={() => onDelete(activeChatId)}>
                 <img src={ClearChatIcon} alt="Clear the chat"
                      className="header-buttons_clear_icon"/>
                 Clear

@@ -7,7 +7,7 @@ import Sidebar from "./components/Sidebar/Sidebar.jsx";
 
 const App = () => {
 
-    const { chats, activeChat, activeChatId, sendMessage, updatedHeaderTitle, clearActiveChat, updatedChatIcon, selectChat } = useChats()
+    const { chats, activeChat, activeChatId, sendMessage, updatedHeaderTitle, clearActiveChat, updatedChatIcon, selectChat, deleteChat } = useChats()
     return (
         <div className="app-layout">
             <Sidebar
@@ -17,7 +17,11 @@ const App = () => {
                 onNewChat={clearActiveChat}
             />
             <div className="app-main">
-                <Header updatedHeaderTitle={updatedHeaderTitle} clearActiveChat={clearActiveChat} updatedChatIcon={updatedChatIcon}/>
+                <Header updatedHeaderTitle={updatedHeaderTitle}
+                        onDeleteChat={deleteChat}
+                        updatedChatIcon={updatedChatIcon}
+                        activeChatId={activeChatId}
+                />
 
                 {activeChat ? (
                     <MessageList messages={activeChat.messages} />

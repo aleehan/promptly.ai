@@ -5,15 +5,16 @@ const Header = (props) => {
 
     const {
         updatedHeaderTitle,
-        clearActiveChat,
         updatedChatIcon,
+        onDeleteChat,
+        activeChatId,
     } = props;
 
 
     return (
         <header className="header">
             <HeaderTitle updatedHeaderTitle={updatedHeaderTitle} updatedChatIcon={updatedChatIcon} />
-            <HeaderButtons onClear={clearActiveChat}/>
+            <HeaderButtons onDelete={onDeleteChat} activeChatId={activeChatId}/>
         </header>
     )
 }

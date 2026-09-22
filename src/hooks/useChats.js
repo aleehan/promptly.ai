@@ -28,6 +28,9 @@ function getFakeAssistantReply() {
 }
 
 const useChats = () => {
+
+    const [updatedChatIcon, setUpdateChatIcon] = useState(logo);
+
     // lazy initialization (link to func into useState) to read the localStorage only one time after rendering
     const [chats, setChats] = useState(() => {
         try {
@@ -52,7 +55,6 @@ const useChats = () => {
     const activeChat = chats.find((chat) => chat.id === activeChatId) ?? null;
 
     const [updatedHeaderTitle, setUpdateHeaderTitle] = useState('New Chat');
-    const [updatedChatIcon, setUpdateChatIcon] = useState(logo);
 
     const sendMessage = useCallback((text) => {
         console.log(text)
@@ -112,13 +114,20 @@ const useChats = () => {
     const clearActiveChat = useCallback(() => {
         setActiveChatId(null);
         setUpdateHeaderTitle('New Chat');
+        setUpdateChatIcon(logo);
     }, []);
 
     const selectChat = useCallback((chatId) => {
         setActiveChatId(chatId);
         const chat = chats.find((chat) => chat.id === chatId);
         setUpdateHeaderTitle(chat ? chat.title : "New Chat");
+        setUpdateChatIcon(chatIcon);
     }, [chats])
+
+    const deleteChat = useCallback((chatId) => {
+        console.log("Deleting");
+        setChats((prevChats) => prevChats.filter((chat) => chat.id !== chatId));
+    }, [])
 
     return {
         chats,
@@ -129,7 +138,8 @@ const useChats = () => {
         clearActiveChat,
         updatedHeaderTitle,
         updatedChatIcon,
-        selectChat
+        selectChat,
+        deleteChat,
     };
 }
 
