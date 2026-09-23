@@ -10,6 +10,8 @@ const STORAGE_KEY = 'promptly_chats';
 const useChats = () => {
 
     const [updatedChatIcon, setUpdateChatIcon] = useState(logo);
+    const [activeChatId, setActiveChatId] = useState(null);
+    const [updatedHeaderTitle, setUpdateHeaderTitle] = useState('New Chat');
 
     // lazy initialization (link to func into useState) to read the localStorage only one time after rendering
     const [chats, setChats] = useState(() => {
@@ -20,8 +22,6 @@ const useChats = () => {
             return [];
         }
     });
-
-    const [activeChatId, setActiveChatId] = useState(null);
 
     // saving after changes of [chats]
     useEffect(() => {
@@ -34,7 +34,36 @@ const useChats = () => {
 
     const activeChat = chats.find((chat) => chat.id === activeChatId) ?? null;
 
-    const [updatedHeaderTitle, setUpdateHeaderTitle] = useState('New Chat');
+    const TITLE_SYSTEM_PROMPT = 'Придумай короткое название для этого диалога (3-5 слов, без кавычек и точки в конце), отражающее суть вопроса пользователя. Ответь ТОЛЬКО названием, без каких-либо пояснений.';
+
+    async function generateChatTitle(userText, assistantText) {
+        try {
+            const response = await fetch('https://api.x.ai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                },
+                body: JSON.stringify({
+                    model: 'grok-4-fast',
+                    messages: [
+                        { role: 'system', content: TITLE_SYSTEM_PROMPT },
+                        { role: 'user', content: userText },
+                        { role: 'assistant', content: assistantText },
+                    ],
+                    max_tokens: 20,
+                }),
+            });
+
+            if (!response.ok) return null;
+
+            const data = await response.json();
+            return data.choices[0]?.message?.content?.trim() ?? null;
+        } catch (error) {
+            console.error('Failed to generate chat title:', error);
+            return null;
+        }
+    }
 
     const sendMessage = useCallback(async (text) => {
         console.log(text)
@@ -116,6 +145,21 @@ const useChats = () => {
                         : chat
                 )
             );
+
+            if(!activeChat) {
+                generateChatTitle(trimmedText, replyText).then((generatedTitle) => {
+                    if(!generatedTitle) return;
+
+                    setChats((prevChats) =>
+                        prevChats.map((chat) =>
+                            chat.id === targetChatId
+                                ? {...chat, title: generatedTitle}
+                                : chat
+                        )
+                    )
+                    setUpdateHeaderTitle(generatedTitle);
+                })
+            }
         } catch {
             console.error('Failed to get response from Grok:', error)
         }
