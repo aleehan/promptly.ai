@@ -1,3 +1,5 @@
+import ReactMarkdown from 'react-markdown';
+
 const Message = (props) => {
     const {
         role,
@@ -13,7 +15,13 @@ const Message = (props) => {
     return (
         <div className="message" data-role={role}>
             <div className="message-bubble">
-                <div className="message-bubble_content">{text}</div>
+                <div className="message-bubble_content">
+                    {role === 'assistant' ? (
+                        <ReactMarkdown>{text}</ReactMarkdown>
+                    ) : (
+                        text
+                    )}
+                </div>
             </div>
             {role === 'user' && (
                 <span className="message-bubble_timestamp">{time}</span>
