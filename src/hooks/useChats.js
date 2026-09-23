@@ -2,30 +2,10 @@ import {useCallback, useEffect, useState} from "react";
 import logo from "/src/assets/icons/logo.svg"
 import chatIcon from "/src/assets/icons/chat-icon.svg"
 
+const apiKey = import.meta.env.VITE_GROK_API_KEY;
 
 
 const STORAGE_KEY = 'promptly_chats';
-
-const FAKE_RESPONSES = [
-    'Great question! Let me explain it clearly',
-
-    'Hello! I am doing well, thank you for asking. How can I help you today?If you have a specific task in mind, ' +
-    'let me know if you would like to:Generate more text (like stories, essays, or placeholder text)Brainstorm ideas ' +
-    'for a projectSolve a problem or analyze some dataHow would you like to proceed?',
-
-    'The ancient clock struck thirteen, echoing softly through the hollow corridors of the abandoned observatory. ' +
-    'Outside, a gentle mist rolled over the jagged peaks of the obsidian mountains, turning the pine trees into vague, ' +
-    'ghostly silhouettes. Blue lanterns flickered along the winding cobblestone path where no traveler had walked for ' +
-    'decades. A solitary mechanical owl perched upon the rusted iron gate, its brass gears clicking in a slow, rhythmic ' +
-    'cadence that matched the distant murmur of the tide against the cliffs. Within this quiet isolation, fragments of ' +
-    'forgotten blueprints and dust-covered star charts lay scattered across mahogany desks, waiting patiently for a dawn ' +
-    'that seemed perpetually delayed by the creeping violet twilight.',
-];
-
-function getFakeAssistantReply() {
-    const randomIndex = Math.floor(Math.random() * FAKE_RESPONSES.length);
-    return FAKE_RESPONSES[randomIndex];
-}
 
 const useChats = () => {
 
@@ -56,7 +36,7 @@ const useChats = () => {
 
     const [updatedHeaderTitle, setUpdateHeaderTitle] = useState('New Chat');
 
-    const sendMessage = useCallback((text) => {
+    const sendMessage = useCallback(async (text) => {
         console.log(text)
         const trimmedText = text.trim();
         if(!trimmedText) return;
@@ -92,11 +72,39 @@ const useChats = () => {
                 ))
         }
 
-        setTimeout(() => {
+        const messagesForApi = [
+            ...(activeChat?.messages ?? []).map((msg) => ({
+                role: msg.role,
+                content: msg.text,
+            })),
+            {role: 'user', content: trimmedText},
+        ];
+
+        try {
+            const response = await fetch('https://api.x.ai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: 'grok-4-fast',
+                    messages: messagesForApi,
+                })
+            })
+            if(!response.ok) {
+                const errorText = await response.text();
+                console.error('Server return an error', errorText);
+                return;
+            }
+
+            const data = await response.json();
+            const replyText = data.choices[0].message.content;
+
             const assistantMessage = {
                 id: crypto.randomUUID(),
                 role: 'assistant',
-                text: getFakeAssistantReply(),
+                text: replyText,
                 timestamp: Date.now(),
                 status: 'sent',
             };
@@ -108,8 +116,10 @@ const useChats = () => {
                         : chat
                 )
             );
-        }, 1200)
-    }, [activeChatId])
+        } catch {
+            console.error('Failed to get response from Grok:', error)
+        }
+    }, [activeChatId, activeChat])
 
     const clearActiveChat = useCallback(() => {
         setActiveChatId(null);
