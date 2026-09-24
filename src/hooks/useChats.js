@@ -101,6 +101,22 @@ const useChats = () => {
                 ))
         }
 
+        const pendingMessageId = crypto.randomUUID();
+        const pendingMessage = {
+            id: pendingMessageId,
+            role: 'assistant',
+            text: '',
+            timestamp: Date.now(),
+            status: 'pending',
+        }
+
+        setChats((prevChats) =>
+            prevChats.map((chat) =>
+                chat.id === targetChatId
+                    ? {...chat, messages: [...chat.messages, pendingMessage] }
+                    : chat
+            ))
+
         const messagesForApi = [
             ...(activeChat?.messages ?? []).map((msg) => ({
                 role: msg.role,
@@ -124,27 +140,45 @@ const useChats = () => {
             if(!response.ok) {
                 const errorText = await response.text();
                 console.error('Server return an error', errorText);
+
+
+                setChats((prevChats) =>
+                    prevChats.map((chat) =>
+                        chat.id === targetChatId
+                            ? {
+                                ...chat,
+                                messages: chat.messages.map((msg) =>
+                                    msg.id === pendingMessageId
+                                        ? {...msg, status: 'error', text: 'Error with fetching answer'}
+                                        : msg
+                                )
+                            }
+                            : chat
+                    )
+                )
                 return;
             }
 
             const data = await response.json();
             const replyText = data.choices[0].message.content;
 
-            const assistantMessage = {
-                id: crypto.randomUUID(),
-                role: 'assistant',
-                text: replyText,
-                timestamp: Date.now(),
-                status: 'sent',
-            };
 
             setChats((prevChats) =>
                 prevChats.map((chat) =>
                     chat.id === targetChatId
-                        ? { ...chat, messages: [...chat.messages, assistantMessage], updatedAt: Date.now() }
+                        ? {
+                            ...chat,
+                            messages: chat.messages.map((msg) =>
+                                msg.id === pendingMessageId
+                                    ? { ...msg, text: replyText, status: 'sent' }
+                                    : msg
+                            ),
+                            updatedAt: Date.now(),
+                        }
                         : chat
                 )
             );
+
 
             if(!activeChat) {
                 generateChatTitle(trimmedText, replyText).then((generatedTitle) => {

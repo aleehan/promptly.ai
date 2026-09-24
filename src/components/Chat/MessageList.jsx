@@ -17,9 +17,7 @@ const MessageList = (props) => {
             {messages.map((msg) => (
                 <Message
                     key={msg.id}
-                    role={msg.role}
-                    text={msg.text}
-                    timestamp={msg.timestamp}
+                    {...msg}
                 />
             ))}
             <div ref={bottomRef}/>

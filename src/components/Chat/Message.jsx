@@ -1,10 +1,12 @@
 import ReactMarkdown from 'react-markdown';
+import MatrixLoader from "../MatrixLoader/MatrixLoader.jsx";
 
 const Message = (props) => {
     const {
         role,
         text,
         timestamp,
+        status,
     } = props;
 
     const time = new Date(timestamp).toLocaleTimeString([], {
@@ -16,7 +18,10 @@ const Message = (props) => {
         <div className="message" data-role={role}>
             <div className="message-bubble">
                 <div className="message-bubble_content">
-                    {role === 'assistant' ? (
+                    {status === 'pending' ? (
+                        // <span className="message-loading-placeholder">Generating...</span>
+                        <MatrixLoader variant={"scan"}/>
+                    ) : role === 'assistant' ? (
                         <ReactMarkdown>{text}</ReactMarkdown>
                     ) : (
                         text
