@@ -181,6 +181,7 @@ const useChats = () => {
     const deleteChat = useCallback((chatId) => {
         console.log("Deleting");
         setChats((prevChats) => prevChats.filter((chat) => chat.id !== chatId));
+        setUpdateHeaderTitle('New Chat');
     }, [])
 
     return {
