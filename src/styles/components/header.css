@@ -62,6 +62,37 @@
     column-gap: 5px;
 }
 
+.header_toggle-sidebar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 8px;
+    background-color: transparent;
+    color: var(--color-dark-gray);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    flex-shrink: 0;
+}
+
+.header_toggle-sidebar:hover {
+    background-color: #8DF052;
+}
+
+.header_toggle-sidebar--hidden {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    column-gap: 10px;
+}
+
 @media (max-width: 655px) {
     .header {
         row-gap: 20px;

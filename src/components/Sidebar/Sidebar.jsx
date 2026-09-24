@@ -1,14 +1,26 @@
 import ChatList from './ChatList';
 import SidebarFooter from './SidebarFooter';
 
-const Sidebar = ({ chats, activeChatId, onSelectChat, onNewChat }) => {
+const Sidebar = ({ chats, activeChatId, onSelectChat, onNewChat, isOpen, onToggle }) => {
     return (
-        <aside className="sidebar">
+        <aside className={`sidebar ${!isOpen ? 'sidebar--closed' : ''}`}>
             <div className="sidebar_brand">
-                <div className="sidebar_brand_logo">
-                    <img src="/src/assets/icons/sidebar/main_logo.svg" alt="Promptly Logo" width="40" height="40"/>
+                <div className="sidebar_brand_left">
+                    <div className="sidebar_brand_logo">
+                        <img src="/src/assets/icons/sidebar/main_logo.svg" alt="Promptly Logo" width="40" height="40"/>
+                    </div>
+                    <span className="sidebar_brand_title">Promptly</span>
                 </div>
-                <span className="sidebar_brand_title">Promptly</span>
+                <button
+                    className={`sidebar_toggle ${!isOpen ? 'sidebar_toggle--hidden' : ''}`}
+                    onClick={onToggle}
+                    aria-label="Close sidebar"
+                >
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+                        <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                              strokeLinejoin="round"/>
+                    </svg>
+                </button>
             </div>
 
             <button className="sidebar_new_chat button" onClick={onNewChat}>

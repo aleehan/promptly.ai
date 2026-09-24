@@ -6,6 +6,7 @@
     height: 100vh;
     border-right: var(--divider-border);
     padding: 20px 16px;
+    transition: transform 0.25s ease, margin-left 0.25s ease;
     background-color: var(--color-white);
 }
 
@@ -13,9 +14,16 @@
 
 .sidebar_brand {
     display: flex;
+    flex-direction: row;
+    align-items: center;
+    column-gap: 98px;
+    margin-bottom: 20px;
+}
+
+.sidebar_brand_left {
+    display: flex;
     align-items: center;
     column-gap: 10px;
-    margin-bottom: 20px;
 }
 
 .sidebar_brand_logo {
@@ -201,4 +209,32 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.sidebar--closed {
+    transform: translateX(-280px);
+    margin-left: -280px;
+}
+
+.sidebar_toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 8px;
+    background-color: transparent;
+    color: var(--color-dark-gray);
+    opacity: 1;
+    transition: opacity 0.15s ease;
+}
+
+.sidebar_toggle:hover {
+    background-color: var(--color-light-gray);
+}
+
+.sidebar_toggle--hidden {
+    opacity: 0;
+    pointer-events: none;
 }

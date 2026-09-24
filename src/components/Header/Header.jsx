@@ -8,12 +8,18 @@ const Header = (props) => {
         updatedChatIcon,
         onDeleteChat,
         activeChatId,
+        isSidebarOpen,
+        onToggleSidebar,
     } = props;
 
 
     return (
         <header className="header">
-            <HeaderTitle updatedHeaderTitle={updatedHeaderTitle} updatedChatIcon={updatedChatIcon} />
+            <HeaderTitle updatedHeaderTitle={updatedHeaderTitle}
+                         updatedChatIcon={updatedChatIcon}
+                         isSidebarOpen={isSidebarOpen}
+                         onToggleSidebar={onToggleSidebar}
+            />
             <HeaderButtons onDelete={onDeleteChat} activeChatId={activeChatId}/>
         </header>
     )
