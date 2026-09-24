@@ -32,7 +32,7 @@ const WelcomeScreen = (props) => {
                             icon={suggest.icon}
                             title={suggest.title}
                             text={suggest.text}
-                            onClick={() => onSuggestionClick(suggest.title)}
+                            onClick={() => onSuggestionClick(suggest.prompt)}
                         />
                     ))}
                 </div>
