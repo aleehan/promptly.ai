@@ -1,4 +1,8 @@
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import MatrixLoader from "../MatrixLoader/MatrixLoader.jsx";
 
 const Message = (props) => {
@@ -22,7 +26,11 @@ const Message = (props) => {
                         // <span className="message-loading-placeholder">Generating...</span>
                         <MatrixLoader variant={"scan"}/>
                     ) : role === 'assistant' ? (
-                        <ReactMarkdown>{text}</ReactMarkdown>
+                        <ReactMarkdown
+                            remarkPlugins={[remarkGfm, remarkMath]}
+                            rehypePlugins={[rehypeKatex]}
+                        >{text}
+                        </ReactMarkdown>
                     ) : (
                         text
                     )}
