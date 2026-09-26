@@ -4,6 +4,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import MatrixLoader from "../MatrixLoader/MatrixLoader.jsx";
+import markdownComponents from "./markdownComponents.jsx";
 
 const Message = (props) => {
     const {
@@ -29,6 +30,7 @@ const Message = (props) => {
                         <ReactMarkdown
                             remarkPlugins={[remarkGfm, remarkMath]}
                             rehypePlugins={[rehypeKatex]}
+                            components={markdownComponents}
                         >{text}
                         </ReactMarkdown>
                     ) : (
