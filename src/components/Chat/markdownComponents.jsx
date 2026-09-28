@@ -27,6 +27,13 @@ const markdownComponents = {
             </code>
         );
     },
+    table({ node, children, ...props }) {
+        return (
+            <div className="markdown-table-wrapper">
+                <table {...props}>{children}</table>
+            </div>
+        );
+    },
 };
 
 export default markdownComponents;

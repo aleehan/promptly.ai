@@ -2,7 +2,8 @@
     display: flex;
     flex-direction: column;
     width: auto;
-    max-width: 40%;
+    max-width: min(720px, 85%);
+    min-width: 0;
     margin: 20px 208px;
     font-size: 14px;
     font-weight: 400;
@@ -10,6 +11,10 @@
 
 .message[data-role="user"] {
     margin-left: auto;
+}
+
+.message-bubble {
+    min-width: 0;
 }
 
 .message[data-role="user"] .message-bubble_content {
@@ -31,9 +36,10 @@
 }
 
 .message[data-role="assistant"] .message-bubble_content {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
     border-radius: 16px;
     border-color: var(--color-border);
     border-style: solid;
@@ -69,6 +75,27 @@
     font-weight: 600;
 }
 
+.markdown-table-wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+    margin-block: 12px;
+}
+
+.markdown-table-wrapper table {
+    width: max-content;
+    min-width: 100%;
+    margin: 0;
+}
+
+/* Скрыть полосу прокрутки, как для блоков кода */
+.markdown-table-wrapper {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.markdown-table-wrapper::-webkit-scrollbar {
+    display: none;
+}
 
 .message-bubble_content a {
     color: var(--color-dark-alternate);
@@ -106,6 +133,19 @@
     background-color: transparent;
     padding: 0;
 }
+
+.message-bubble_content .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.message-bubble_content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.message-bubble_content > *:first-child { margin-top: 0; }
+.message-bubble_content > *:last-child { margin-bottom: 0; }
 
 @media (max-width: 1300px) {
     .message {

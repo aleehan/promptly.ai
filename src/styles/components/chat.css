@@ -80,6 +80,8 @@
     overflow-y: auto;
     scrollbar-width: none;
     row-gap: 16px;
+    padding: 24px clamp(16px, 5vw, 208px);
+    min-width: 0;
 }
 
 @media (max-width: 1137px) {
