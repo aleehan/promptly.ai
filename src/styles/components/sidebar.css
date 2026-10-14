@@ -238,3 +238,31 @@
     opacity: 0;
     pointer-events: none;
 }
+
+.sidebar_search_input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-dark);
+    padding: 0;
+}
+
+.sidebar_search_toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--color-dark-gray);
+    flex-shrink: 0;
+}
+
+.sidebar_no_results {
+    font-size: 12px;
+    color: var(--color-dark-gray);
+    padding: 8px 4px;
+}

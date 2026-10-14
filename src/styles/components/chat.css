@@ -80,7 +80,9 @@
     overflow-y: auto;
     scrollbar-width: none;
     row-gap: 16px;
-    padding: 24px clamp(16px, 5vw, 208px);
+    padding-block: 24px;
+    padding-left: clamp(16px, 3vw, 64px);
+    padding-right: clamp(16px, 5vw, 208px);
     min-width: 0;
 }
 
