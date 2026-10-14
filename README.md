@@ -95,7 +95,7 @@ npm run preview   # preview the production build locally
 - [ ] Node.js + Express backend that proxies requests to an LLM API (API key stays on the server)
 - [ ] Streaming responses (SSE / `ReadableStream`) with a "stop generating" button
 - [ ] Correct handling of chat switching during streaming (bind updates to `chatId`)
-- [ ] Markdown rendering and code highlighting in assistant messages
+- [x] Markdown rendering and code highlighting in assistant messages
 - [ ] Rate limiting and request validation on the API
 - [ ] Tests (Vitest + React Testing Library)
 - [ ] Migration to TypeScript
