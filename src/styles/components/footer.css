@@ -18,7 +18,7 @@
     padding-inline: 12px;
     padding-block: 4px;
     row-gap: 8px;
-    background-color: #ffffff;
+    background-color: var(--color-white);
 }
 
 .footer-input_chat_main {
@@ -27,10 +27,14 @@
     justify-content: space-around;
 }
 
+.footer-input_chat_main textarea {
+    background-color: var(--color-white);
+}
+
 .footer-input_chat_main_text {
     width: 100%;
     font-size: 14px;
-    color: #000000;
+    color: var(--color-dark);
     flex: 1 1 auto;
     min-width: 0;
     resize: none;

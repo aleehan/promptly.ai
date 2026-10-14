@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import Header from "./components/Header/Header.jsx";
 import Footer from "./components/Footer/Footer.jsx";
 import WelcomeScreen from "./components/WelcomeScreen/WelcomeScreen.jsx";
@@ -14,6 +14,25 @@ const App = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        try {
+            return localStorage.getItem('promptly_theme') === 'dark';
+        } catch {
+            return false;
+        }
+    });
+
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+        try {
+            localStorage.setItem('promptly_theme', isDarkMode ? 'dark' : 'light');
+        } catch (error) {
+            console.log('Failed to set theme: ', error);
+        }
+    }, [isDarkMode]);
+
+    const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
+
     return (
         <div className="app-layout">
             <Sidebar
@@ -23,6 +42,8 @@ const App = () => {
                 onNewChat={clearActiveChat}
                 isOpen={isSidebarOpen}
                 onToggle={toggleSidebar}
+                isDarkMode={isDarkMode}
+                toggleDarkMode={toggleDarkMode}
             />
             <div className="app-main">
                 <Header updatedHeaderTitle={updatedHeaderTitle}

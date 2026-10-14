@@ -85,6 +85,8 @@
     flex-direction: column;
     row-gap: 4px;
     overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 .sidebar_item {

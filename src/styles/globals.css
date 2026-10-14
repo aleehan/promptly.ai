@@ -57,7 +57,7 @@ p:not([class]):not(:last-child) {
     color: var(--color-border-text);
     padding-inline: 13px;
     padding-block: 7px;
-    background-color: white;
+    background-color: var(--color-white);
 }
 
 .header,
