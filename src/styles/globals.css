@@ -19,8 +19,8 @@ body {
     background-color: var(--color-white);
 }
 
-svg *[fill] { fill: currentColor }
-svg *[stroke] { stroke: currentColor }
+svg:not(.recharts-surface) *[fill] { fill: currentColor }
+svg:not(.recharts-surface) *[stroke] { stroke: currentColor }
 
 a, button, input, textarea, svg * {
     transition-duration: var(--transition-duration);
@@ -74,6 +74,7 @@ p:not([class]):not(:last-child) {
 .app-main {
     display: flex;
     flex-direction: column;  /* вертикально: header/main/footer друг под другом, как раньше */
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-height: 0;
+    min-width: 0;
 }

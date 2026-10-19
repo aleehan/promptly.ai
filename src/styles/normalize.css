@@ -162,7 +162,8 @@ button {
  */
 :where([fill]:not(
   [fill="none"],
-  [fill^="url"]
+  [fill^="url"],
+  .recharts-wrapper *
 )) {
     fill: currentColor;
 }
@@ -174,7 +175,8 @@ button {
  */
 :where([stroke]:not(
   [stroke="none"],
-  [stroke^="url"]
+  [stroke^="url"],
+  .recharts-wrapper *
 )) {
     stroke: currentColor;
 }
