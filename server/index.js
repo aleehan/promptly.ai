@@ -47,10 +47,10 @@ app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json({limit: '100kb'}));
 
 const apiLimiter = rateLimit({
-    windowMs: 60 * 1000,            // окно: 1 минута
-    limit: 3,                      // максимум 20 запросов с одного IP за окно
-    standardHeaders: 'draft-7',     // отдаёт заголовки RateLimit-* клиенту
-    legacyHeaders: false,           // старые X-RateLimit-* не нужны
+    windowMs: 60 * 1000,            
+    limit: 20,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
     message: { error: 'Too many requests, try again in a minute' },
 });
 
