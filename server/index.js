@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 
 const app = express();
 
@@ -44,6 +45,17 @@ if (!process.env.XAI_API_KEY) {
 
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json({limit: '100kb'}));
+
+const apiLimiter = rateLimit({
+    windowMs: 60 * 1000,            // окно: 1 минута
+    limit: 3,                      // максимум 20 запросов с одного IP за окно
+    standardHeaders: 'draft-7',     // отдаёт заголовки RateLimit-* клиенту
+    legacyHeaders: false,           // старые X-RateLimit-* не нужны
+    message: { error: 'Too many requests, try again in a minute' },
+});
+
+app.use('/api/chat', apiLimiter);
+app.use('/api/title', apiLimiter);
 
 app.get('/api/health', (req, res) => {
     res.json({ ok: true, message: 'Server is working' });
