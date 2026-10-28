@@ -2,8 +2,6 @@ import {useCallback, useEffect, useState} from "react";
 import logo from "/src/assets/icons/logo.svg"
 import chatIcon from "/src/assets/icons/chat-icon.svg"
 
-const apiKey = import.meta.env.VITE_GROK_API_KEY;
-
 const STORAGE_KEY = 'promptly_chats';
 
 const SYSTEM_PROMPT = [
@@ -55,31 +53,18 @@ const useChats = () => {
 
     const activeChat = chats.find((chat) => chat.id === activeChatId) ?? null;
 
-    const TITLE_SYSTEM_PROMPT = 'Придумай короткое название для этого диалога (3-5 слов, без кавычек и точки в конце), отражающее суть вопроса пользователя. Ответь ТОЛЬКО названием, без каких-либо пояснений.';
-
     async function generateChatTitle(userText, assistantText) {
         try {
-            const response = await fetch('https://api.x.ai/v1/chat/completions', {
+            const response = await fetch('/api/title', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                },
-                body: JSON.stringify({
-                    model: 'grok-4-fast',
-                    messages: [
-                        { role: 'system', content: TITLE_SYSTEM_PROMPT },
-                        { role: 'user', content: userText },
-                        { role: 'assistant', content: assistantText },
-                    ],
-                    max_tokens: 20,
-                }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userText, assistantText }),
             });
 
             if (!response.ok) return null;
 
             const data = await response.json();
-            return data.choices[0]?.message?.content?.trim() ?? null;
+            return data.title ?? null;
         } catch (error) {
             console.error('Failed to generate chat title:', error);
             return null;
@@ -139,8 +124,9 @@ const useChats = () => {
             ))
 
         const messagesForApi = [
-            { role: 'system', content: SYSTEM_PROMPT },
-            ...(activeChat?.messages ?? []).map((msg) => ({
+            ...(activeChat?.messages ?? [])
+                .filter((msg) => msg.status !== 'pending' && msg.status !== 'error')
+                .map((msg) => ({
                 role: msg.role,
                 content: msg.text,
             })),
@@ -148,16 +134,10 @@ const useChats = () => {
         ];
 
         try {
-            const response = await fetch('https://api.x.ai/v1/chat/completions', {
+            const response = await fetch('/api/chat', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    model: 'grok-4-fast',
-                    messages: messagesForApi,
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: messagesForApi })
             })
             if(!response.ok) {
                 const errorText = await response.text();
@@ -182,7 +162,7 @@ const useChats = () => {
             }
 
             const data = await response.json();
-            const replyText = data.choices[0].message.content;
+            const replyText = data.reply;
 
 
             setChats((prevChats) =>
@@ -216,8 +196,23 @@ const useChats = () => {
                     setUpdateHeaderTitle(generatedTitle);
                 })
             }
-        } catch {
-            console.error('Failed to get response from Grok:', error)
+        } catch (error) {
+            console.error('Failed to get response from Promptly:', error)
+
+            setChats((prevChats) =>
+                prevChats.map((chat) =>
+                    chat.id === targetChatId
+                        ? {
+                            ...chat,
+                            messages: chat.messages.map((msg) =>
+                                msg.id === pendingMessageId
+                                    ? { ...msg, status: 'error', text: 'Network error' }
+                                    : msg
+                            ),
+                        }
+                        : chat
+                )
+            );
         }
     }, [activeChatId, activeChat])
 
