@@ -268,3 +268,28 @@
     color: var(--color-dark-gray);
     padding: 8px 4px;
 }
+
+.sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    z-index: 90;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100dvh;
+        width: min(280px, 85vw);
+        z-index: 100;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.25);
+    }
+
+    .sidebar--closed {
+        transform: translateX(-100%);
+        margin-left: 0;
+        box-shadow: none;
+    }
+}
