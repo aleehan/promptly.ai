@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import pool from './db.js';
+import authRouter from './routes/auth.js';
 
 const app = express();
 
@@ -56,6 +58,7 @@ const apiLimiter = rateLimit({
 
 app.use('/api/chat', apiLimiter);
 app.use('/api/title', apiLimiter);
+app.use('/api', authRouter);
 
 app.get('/api/health', (req, res) => {
     res.json({ ok: true, message: 'Server is working' });
@@ -164,6 +167,8 @@ app.post('/api/title', async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 });
+
+
 
 app.listen(3001, () => {
     console.log('Server running on http://localhost:3001');
