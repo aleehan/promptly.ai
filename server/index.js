@@ -1,8 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import pool from './db.js';
 import authRouter from './routes/auth.js';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 
@@ -47,6 +47,7 @@ if (!process.env.XAI_API_KEY) {
 
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json({limit: '100kb'}));
+app.use(cookieParser());
 
 const apiLimiter = rateLimit({
     windowMs: 60 * 1000,            
