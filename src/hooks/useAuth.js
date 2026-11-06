@@ -21,7 +21,7 @@ const useAuth = () => {
                 const response = await fetch('/api/me');
                 if(response.ok) {
                     const data = await response.json();
-                    setUser(data);
+                    setUser(data.user);
                 }
             } catch (error) {
                 console.error('Session check failed:', error);
@@ -57,6 +57,7 @@ const useAuth = () => {
         } catch {
 
         }
+        setUser(null);
     }, [])
 
     const register = useCallback(async (email, password) => {

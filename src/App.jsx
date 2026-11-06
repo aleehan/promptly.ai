@@ -75,7 +75,12 @@ const App = () => {
                 isOpen={isSidebarOpen}
                 onToggle={toggleSidebar}
                 isDarkMode={isDarkMode}
-                toggleDarkMode={toggleDarkMode}
+                onToggleDarkMode={toggleDarkMode}
+                user={user}
+                isAuthLoading={isLoading}
+                onLogin={() => openAuth('login')}
+                onRegister={() => openAuth('register')}
+                onLogout={logout}
             />
             {isMobile && isSidebarOpen && (
                 <div className="sidebar-backdrop" onClick={toggleSidebar} />

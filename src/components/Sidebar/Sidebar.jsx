@@ -1,7 +1,10 @@
 import ChatList from './ChatList';
 import SidebarFooter from './SidebarFooter';
 
-const Sidebar = ({ chats, activeChatId, onSelectChat, onNewChat, isOpen, onToggle, isDarkMode, toggleDarkMode }) => {
+const Sidebar = ({ chats, activeChatId, onSelectChat, onNewChat,
+                     isOpen, onToggle, isDarkMode, onToggleDarkMode,
+                     user, isAuthLoading, onLogin, onRegister, onLogout,
+}) => {
     return (
         <aside className={`sidebar ${!isOpen ? 'sidebar--closed' : ''}`}>
             <div className="sidebar_brand">
@@ -39,7 +42,12 @@ const Sidebar = ({ chats, activeChatId, onSelectChat, onNewChat, isOpen, onToggl
 
             <SidebarFooter
                 isDarkMode={isDarkMode}
-                toggleDarkMode={toggleDarkMode}
+                onToggleDarkMode={onToggleDarkMode}
+                user={user}
+                isAuthLoading={isAuthLoading}
+                onLogin={onLogin}
+                onRegister={onRegister}
+                onLogout={onLogout}
             />
         </aside>
     );
