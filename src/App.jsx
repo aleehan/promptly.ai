@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useEffect, useState, useCallback} from "react";
 import Header from "./components/Header/Header.jsx";
 import Footer from "./components/Footer/Footer.jsx";
 import WelcomeScreen from "./components/WelcomeScreen/WelcomeScreen.jsx";
@@ -7,15 +7,22 @@ import useChats from "./hooks/useChats.js";
 import Sidebar from "./components/Sidebar/Sidebar.jsx";
 import useMediaQuery from "./hooks/useMediaQuery.js";
 import useAuth from "./hooks/useAuth.js";
+import AuthModal from './components/Auth/AuthModal';
 
 
 const App = () => {
 
     const { chats, activeChat, activeChatId, sendMessage, updatedHeaderTitle, clearActiveChat, updatedChatIcon, selectChat, deleteChat } = useChats()
 
-    const { user, isLoading, error, login, logout, register } = useAuth();
-    window.auth = { error, login, logout, register };
-    console.log('auth:', user, isLoading);
+    const { user, isLoading, error, login, logout, register, clearError } = useAuth();
+    const [authModal, setAuthModal] = useState(null);
+
+    const openAuth = useCallback((mode) => {
+        clearError();
+        setAuthModal(mode);
+    }, [clearError]);
+
+    const closeAuth = useCallback(() => setAuthModal(null), []);
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(() => !window.matchMedia('(max-width: 768px)').matches);
     const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
@@ -90,6 +97,15 @@ const App = () => {
 
                 <Footer onSend={sendMessage} />
             </div>
+            {authModal && (
+                <AuthModal
+                    mode={authModal}
+                    error={error}
+                    onSubmit={authModal === 'login' ? login : register}
+                    onSwitchMode={() => openAuth(authModal === 'login' ? 'register' : 'login')}
+                    onClose={closeAuth}
+                />
+            )}
         </div>
 
     )

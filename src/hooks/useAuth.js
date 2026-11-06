@@ -75,7 +75,9 @@ const useAuth = () => {
         }
     }, [login])
 
-    return { user, isLoading, error, login, logout, register };
+    const clearError = useCallback(() => setError(null), []);
+
+    return { user, isLoading, error, login, logout, register, clearError };
 };
 
 export default useAuth;
