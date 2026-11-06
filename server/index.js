@@ -4,6 +4,9 @@ import rateLimit from 'express-rate-limit';
 import authRouter from './routes/auth.js';
 import cookieParser from 'cookie-parser';
 
+import identify from './middleware/identify.js';
+import { consumeQuota, refundQuota, getQuota } from './utils/quota.js';
+
 const app = express();
 
 const SYSTEM_PROMPT = [
@@ -65,36 +68,49 @@ app.get('/api/health', (req, res) => {
     res.json({ ok: true, message: 'Server is working' });
 });
 
-app.post('/api/chat', async (req, res) => {
-    const { messages } = req.body;
+app.post('/api/chat', identify, async (req, res) => {
+    let charged = false;
 
-    // 1. Проверка входа
-    if (!Array.isArray(messages) || messages.length === 0 || messages.length > MAX_MESSAGES) {
-        return res.status(400).json({ error: 'messages must be a non-empty array' });
-    }
-
-    const isValid = messages.every(
-        (m) =>
-            m &&
-            (m.role === 'user' || m.role === 'assistant') &&
-            typeof m.content === 'string' &&
-            m.content.length > 0 &&
-            m.content.length <= MAX_CONTENT_LENGTH
-
-    );
-
-    if (!isValid) {
-        return res.status(400).json({ error: 'invalid message format' });
-    }
-
-    // 2. Сборка запроса
-    const messagesForApi = [
-        { role: 'system', content: SYSTEM_PROMPT },
-        ...messages.map((m) => ({ role: m.role, content: m.content })),
-    ];
-
-    // 3. Запрос к xAI
     try {
+        const { messages } = req.body;
+
+        // 1. Проверка входа
+        if (!Array.isArray(messages) || messages.length === 0 || messages.length > MAX_MESSAGES) {
+            return res.status(400).json({ error: 'messages must be a non-empty array' });
+        }
+
+        const isValid = messages.every(
+            (m) =>
+                m &&
+                (m.role === 'user' || m.role === 'assistant') &&
+                typeof m.content === 'string' &&
+                m.content.length > 0 &&
+                m.content.length <= MAX_CONTENT_LENGTH
+        );
+
+        if (!isValid) {
+            return res.status(400).json({ error: 'invalid message format' });
+        }
+
+        // 2. Списываем запрос только после успешной валидации
+        const quota = await consumeQuota(req.actor);
+        if (!quota) {
+            const { limit } = await getQuota(req.actor);
+            return res.status(403).json({
+                error: 'Request limit reached',
+                code: 'LIMIT_REACHED',
+                limit,
+            });
+        }
+        charged = true;
+
+        // 3. Сборка запроса
+        const messagesForApi = [
+            { role: 'system', content: SYSTEM_PROMPT },
+            ...messages.map((m) => ({ role: m.role, content: m.content })),
+        ];
+
+        // 4. Запрос к xAI
         const response = await fetch('https://api.x.ai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -105,8 +121,8 @@ app.post('/api/chat', async (req, res) => {
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('xAI error:', response.status, errorText);
+            console.error('xAI error:', response.status, await response.text());
+            await refundQuota(req.actor);
             return res.status(502).json({ error: 'AI provider error' });
         }
 
@@ -115,13 +131,15 @@ app.post('/api/chat', async (req, res) => {
 
         if (typeof reply !== 'string') {
             console.error('Unexpected xAI response shape:', data);
+            await refundQuota(req.actor);
             return res.status(502).json({ error: 'AI provider returned an unexpected response' });
         }
 
-        res.json({ reply });
+        res.json({ reply, remaining: quota.limit - quota.used });
     } catch (error) {
         console.error('Chat request failed:', error);
-        res.status(500).json({ error: 'Server error' });
+        if (charged) await refundQuota(req.actor).catch(() => {});
+        if (!res.headersSent) res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -165,6 +183,16 @@ app.post('/api/title', async (req, res) => {
         res.json({ title });
     } catch (error) {
         console.error('Title request failed:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.get('/api/quota', identify, async (req, res) => {
+    try {
+        const { used, limit } = await getQuota(req.actor);
+        res.json({ type: req.actor.type, used, limit, remaining: limit - used });
+    } catch (error) {
+        console.error('Quota request failed:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
