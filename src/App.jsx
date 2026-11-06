@@ -6,11 +6,16 @@ import MessageList from "./components/Chat/MessageList.jsx";
 import useChats from "./hooks/useChats.js";
 import Sidebar from "./components/Sidebar/Sidebar.jsx";
 import useMediaQuery from "./hooks/useMediaQuery.js";
+import useAuth from "./hooks/useAuth.js";
 
 
 const App = () => {
 
     const { chats, activeChat, activeChatId, sendMessage, updatedHeaderTitle, clearActiveChat, updatedChatIcon, selectChat, deleteChat } = useChats()
+
+    const { user, isLoading, error, login, logout, register } = useAuth();
+    window.auth = { error, login, logout, register };
+    console.log('auth:', user, isLoading);
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(() => !window.matchMedia('(max-width: 768px)').matches);
     const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
