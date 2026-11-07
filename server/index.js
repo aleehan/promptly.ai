@@ -144,17 +144,23 @@ app.post('/api/chat', identify, async (req, res) => {
     }
 });
 
-app.post('/api/title', async (req, res) => {
-    const { userText, assistantText } = req.body;
-
-    const isValid = [userText, assistantText].every(
-        (t) => typeof t === 'string' && t.length > 0 && t.length <= MAX_CONTENT_LENGTH
-    );
-    if (!isValid) {
-        return res.status(400).json({ error: 'invalid input' });
-    }
-
+app.post('/api/title', identify, async (req, res) => {
     try {
+        const { userText, assistantText } = req.body;
+
+        const isValid = [userText, assistantText].every(
+            (t) => typeof t === 'string' && t.length > 0 && t.length <= MAX_CONTENT_LENGTH
+        );
+        if (!isValid) {
+            return res.status(400).json({ error: 'invalid input' });
+        }
+
+        // Заголовок только тем, кто уже делал чат-запрос
+        const { used } = await getQuota(req.actor);
+        if (used === 0) {
+            return res.status(403).json({ error: 'Title is not available yet' });
+        }
+
         const response = await fetch('https://api.x.ai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -168,7 +174,7 @@ app.post('/api/title', async (req, res) => {
                     { role: 'user', content: userText },
                     { role: 'assistant', content: assistantText },
                 ],
-                max_tokens: 20,
+                max_tokens: 32,
             }),
         });
 
@@ -184,7 +190,7 @@ app.post('/api/title', async (req, res) => {
         res.json({ title });
     } catch (error) {
         console.error('Title request failed:', error);
-        res.status(500).json({ error: 'Server error' });
+        if (!res.headersSent) res.status(500).json({ error: 'Server error' });
     }
 });
 
