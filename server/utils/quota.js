@@ -1,6 +1,6 @@
 import pool from '../db.js';
 
-const LIMITS = { guest: 10, user: 100 };
+const LIMITS = { guest: 5, user: 30 };
 const TABLES = { guest: 'guests', user: 'users' };
 
 // Атомарно: увеличиваем счётчик только если лимит не исчерпан.

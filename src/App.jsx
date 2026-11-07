@@ -12,8 +12,6 @@ import AuthModal from './components/Auth/AuthModal';
 
 const App = () => {
 
-    const { chats, activeChat, activeChatId, sendMessage, updatedHeaderTitle, clearActiveChat, updatedChatIcon, selectChat, deleteChat } = useChats()
-
     const { user, isLoading, error, login, logout, register, clearError } = useAuth();
     const [authModal, setAuthModal] = useState(null);
 
@@ -23,6 +21,11 @@ const App = () => {
     }, [clearError]);
 
     const closeAuth = useCallback(() => setAuthModal(null), []);
+
+    const { chats, activeChat, activeChatId, sendMessage, updatedHeaderTitle,
+        clearActiveChat, updatedChatIcon, selectChat, deleteChat,
+    } = useChats({ onLimitReached: () => openAuth('register') })
+
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(() => !window.matchMedia('(max-width: 768px)').matches);
     const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);

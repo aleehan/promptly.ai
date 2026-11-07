@@ -4,7 +4,7 @@ import chatIcon from "/src/assets/icons/chat-icon.svg"
 
 const STORAGE_KEY = 'promptly_chats';
 
-const useChats = () => {
+const useChats = ({ onLimitReached } = {}) => {
 
     const [updatedChatIcon, setUpdateChatIcon] = useState(logo);
     const [activeChatId, setActiveChatId] = useState(null);
@@ -118,9 +118,19 @@ const useChats = () => {
                 body: JSON.stringify({ messages: messagesForApi })
             })
             if(!response.ok) {
-                const errorText = await response.text();
-                console.error('Server return an error', errorText);
+                let errorData = {};
+                try { errorData = await response.json(); } catch { /* пустое тело */ }
 
+                const isLimit = response.status === 403 && errorData.code === 'LIMIT_REACHED';
+
+                let errorLabel = 'Error with fetching answer';
+                if (isLimit) {
+                    errorLabel = errorData.type === 'guest'
+                        ? 'Free requests are over. Sign up to continue.'
+                        : 'Request limit reached.';
+                } else if (response.status === 429) {
+                    errorLabel = 'Too many requests. Wait a minute and try again.';
+                }
 
                 setChats((prevChats) =>
                     prevChats.map((chat) =>
@@ -129,13 +139,14 @@ const useChats = () => {
                                 ...chat,
                                 messages: chat.messages.map((msg) =>
                                     msg.id === pendingMessageId
-                                        ? {...msg, status: 'error', text: 'Error with fetching answer'}
+                                        ? { ...msg, status: 'error', text: errorLabel }
                                         : msg
-                                )
+                                ),
                             }
                             : chat
                     )
-                )
+                );
+                if (isLimit && errorData.type === 'guest') onLimitReached?.();
                 return;
             }
 
@@ -192,7 +203,7 @@ const useChats = () => {
                 )
             );
         }
-    }, [activeChatId, activeChat])
+    }, [activeChatId, activeChat, onLimitReached])
 
     const clearActiveChat = useCallback(() => {
         setActiveChatId(null);

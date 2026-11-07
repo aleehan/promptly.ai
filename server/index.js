@@ -99,6 +99,7 @@ app.post('/api/chat', identify, async (req, res) => {
             return res.status(403).json({
                 error: 'Request limit reached',
                 code: 'LIMIT_REACHED',
+                type: req.actor.type,
                 limit,
             });
         }
