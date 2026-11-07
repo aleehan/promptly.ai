@@ -4,29 +4,7 @@ import chatIcon from "/src/assets/icons/chat-icon.svg"
 
 const STORAGE_KEY = 'promptly_chats';
 
-const SYSTEM_PROMPT = [
-    'You are Promptly, a friendly AI assistant built into the Promptly app to help users with their personal finances — budgeting, expense analysis, savings planning, and financial scenario planning. Never mention that you are Grok or that you were developed by xAI — you are Promptly.',
-
-    'Reply in the same language the user writes in (Russian if they write in Russian, English if they write in English, and so on).',
-
-    'When writing tables, use standard GitHub-Flavored Markdown table syntax (pipes and dashes).',
-
-    'When writing math formulas, use LaTeX syntax wrapped in dollar signs: $formula$ for inline formulas within a sentence, and $$formula$$ for formulas on their own line. Never wrap formulas in square brackets or any other delimiter.',
-
-    'When a chart would help the user understand numeric data (spending breakdowns, savings progress, comparisons over time), include it as a fenced code block with the language "chart", containing a single JSON object:',
-    '{"type": "bar" | "line" | "pie", "title": "string", "data": [{"name": "string", "value": number}]}',
-    'Use valid JSON only (double quotes, no comments, no trailing commas). Keep explanations outside the block, in normal text.',
-
-    'Example of the required format:',
-    '```chart',
-    '{"type": "pie", "title": "Monthly expenses", "data": [{"name": "Food", "value": 15000}, {"name": "Transport", "value": 4500}]}',
-    '```',
-
-    'The opening fence MUST be exactly ```chart (the word "chart" right after the three backticks).',
-].join('\n');
-
-
-const useChats = () => {
+const useChats = ({ onLimitReached } = {}) => {
 
     const [updatedChatIcon, setUpdateChatIcon] = useState(logo);
     const [activeChatId, setActiveChatId] = useState(null);
@@ -140,9 +118,19 @@ const useChats = () => {
                 body: JSON.stringify({ messages: messagesForApi })
             })
             if(!response.ok) {
-                const errorText = await response.text();
-                console.error('Server return an error', errorText);
+                let errorData = {};
+                try { errorData = await response.json(); } catch { /* пустое тело */ }
 
+                const isLimit = response.status === 403 && errorData.code === 'LIMIT_REACHED';
+
+                let errorLabel = 'Error with fetching answer';
+                if (isLimit) {
+                    errorLabel = errorData.type === 'guest'
+                        ? 'Free requests are over. Sign up to continue.'
+                        : 'Request limit reached.';
+                } else if (response.status === 429) {
+                    errorLabel = 'Too many requests. Wait a minute and try again.';
+                }
 
                 setChats((prevChats) =>
                     prevChats.map((chat) =>
@@ -151,13 +139,14 @@ const useChats = () => {
                                 ...chat,
                                 messages: chat.messages.map((msg) =>
                                     msg.id === pendingMessageId
-                                        ? {...msg, status: 'error', text: 'Error with fetching answer'}
+                                        ? { ...msg, status: 'error', text: errorLabel }
                                         : msg
-                                )
+                                ),
                             }
                             : chat
                     )
-                )
+                );
+                if (isLimit && errorData.type === 'guest') onLimitReached?.();
                 return;
             }
 
@@ -214,7 +203,7 @@ const useChats = () => {
                 )
             );
         }
-    }, [activeChatId, activeChat])
+    }, [activeChatId, activeChat, onLimitReached])
 
     const clearActiveChat = useCallback(() => {
         setActiveChatId(null);
