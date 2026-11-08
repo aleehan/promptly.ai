@@ -5,6 +5,7 @@ import pool from '../db.js';
 import crypto from 'node:crypto';
 import requireAuth from '../middleware/requireAuth.js';
 import hashToken from "../utils/token.js";
+import dns from 'node:dns/promises';
 
 const router = express.Router();
 
@@ -19,10 +20,20 @@ const authLimiter = rateLimit({
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UNIQUE_VIOLATION = '23505'; // код ошибки Postgres: нарушена уникальность
 
+
+async function domainCanReceiveMail(email) {
+    const domain = email.split('@')[1];
+    try {
+        const records = await dns.resolveMx(domain);
+        return records.length > 0;
+    } catch {
+        return false;
+    }
+}
+
 router.post('/register', authLimiter, async (req, res) => {
     const { email, password } = req.body;
 
-    // 1. Валидация и нормализация
     const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
     const isEmailValid = EMAIL_REGEX.test(normalizedEmail) && normalizedEmail.length <= 254;
     const isPasswordValid =
@@ -31,6 +42,11 @@ router.post('/register', authLimiter, async (req, res) => {
     if (!isEmailValid || !isPasswordValid) {
         return res.status(400).json({ error: 'Invalid email or password (min 8 characters)' });
     }
+
+    if (!(await domainCanReceiveMail(normalizedEmail))) {
+        return res.status(400).json({ error: 'Email domain looks invalid' });
+    }
+
 
     try {
         // 2. Хеш пароля (соль генерируется и сохраняется внутри самого хеша)
@@ -106,12 +122,17 @@ router.get('/me', requireAuth, (req, res) => {
 });
 
 router.post('/logout', async (req, res) => {
-    const token = req.cookies?.sid;
-    if (typeof token === 'string') {
-        await pool.query('DELETE FROM sessions WHERE id_hash = $1', [hashToken(token)]);
+    try {
+        const token = req.cookies?.sid;
+        if (typeof token === 'string') {
+            await pool.query('DELETE FROM sessions WHERE id_hash = $1', [hashToken(token)]);
+        }
+        res.clearCookie('sid');
+        res.json({ ok: true });
+    } catch (error) {
+        console.error('Logout failed:', error);
+        res.status(500).json({ error: 'Server error' });
     }
-    res.clearCookie('sid');
-    res.json({ ok: true });
 });
 
 export default router;
