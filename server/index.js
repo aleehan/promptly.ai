@@ -7,6 +7,8 @@ import cookieParser from 'cookie-parser';
 import identify from './middleware/identify.js';
 import { consumeQuota, refundQuota, getQuota } from './utils/quota.js';
 
+import chatsRouter from './routes/chats.js';
+
 const app = express();
 
 const SYSTEM_PROMPT = [
@@ -63,6 +65,7 @@ const apiLimiter = rateLimit({
 app.use('/api/chat', apiLimiter);
 app.use('/api/title', apiLimiter);
 app.use('/api', authRouter);
+app.use('/api/chats', chatsRouter);
 
 app.get('/api/health', (req, res) => {
     res.json({ ok: true, message: 'Server is working' });
