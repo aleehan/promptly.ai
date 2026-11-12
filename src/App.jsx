@@ -22,9 +22,13 @@ const App = () => {
 
     const closeAuth = useCallback(() => setAuthModal(null), []);
 
-    const { chats, activeChat, activeChatId, sendMessage, updatedHeaderTitle,
+    const {
+        chats, activeChat, activeChatId, sendMessage, updatedHeaderTitle,
         clearActiveChat, updatedChatIcon, selectChat, deleteChat,
-    } = useChats({ onLimitReached: () => openAuth('register') })
+    } = useChats({
+        onLimitReached: () => openAuth('register'),
+        userId: user?.id ?? null,
+    });
 
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(() => !window.matchMedia('(max-width: 768px)').matches);

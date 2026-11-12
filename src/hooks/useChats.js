@@ -1,123 +1,125 @@
-import {useCallback, useEffect, useState} from "react";
-import logo from "/src/assets/icons/logo.svg"
-import chatIcon from "/src/assets/icons/chat-icon.svg"
+import { useCallback, useEffect, useRef, useState } from "react";
+import logo from "/src/assets/icons/logo.svg";
+import chatIcon from "/src/assets/icons/chat-icon.svg";
 
-const STORAGE_KEY = 'promptly_chats';
+// Формат сервера -> формат, который ждут Message и MessageList
+const toClientMessage = (m) => ({
+    id: m.id,
+    role: m.role,
+    text: m.content,
+    timestamp: new Date(m.created_at).getTime(),
+    status: m.status,
+});
 
-const useChats = ({ onLimitReached } = {}) => {
+const toClientChat = (c) => ({
+    id: c.id,
+    title: c.title,
+    updatedAt: new Date(c.updated_at).getTime(),
+});
 
-    const [updatedChatIcon, setUpdateChatIcon] = useState(logo);
-    const [activeChatId, setActiveChatId] = useState(null);
+const useChats = ({ onLimitReached, userId = null } = {}) => {
+    const [chats, setChats] = useState([]);
+    const [activeChatId, setActiveChatIdState] = useState(null);
+    const [messages, setMessages] = useState([]);
     const [updatedHeaderTitle, setUpdateHeaderTitle] = useState('New Chat');
+    const [updatedChatIcon, setUpdateChatIcon] = useState(logo);
 
-    // lazy initialization (link to func into useState) to read the localStorage only one time after rendering
-    const [chats, setChats] = useState(() => {
+    const activeChatIdRef = useRef(null);
+    const setActive = useCallback((id) => {
+        activeChatIdRef.current = id;
+        setActiveChatIdState(id);
+    }, []);
+
+    const activeChat = activeChatId ? { id: activeChatId, messages } : null;
+
+    const clearActiveChat = useCallback(() => {
+        setActive(null);
+        setMessages([]);
+        setUpdateHeaderTitle('New Chat');
+        setUpdateChatIcon(logo);
+    }, [setActive]);
+
+    const loadChats = useCallback(async () => {
         try {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            return saved ? JSON.parse(saved) : [];
-        } catch {
-            return [];
-        }
-    });
-
-    // saving after changes of [chats]
-    useEffect(() => {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(chats))
-        } catch(error) {
-            console.error('Failed to save chats to localStorage:', error);
-        }
-    }, [chats])
-
-    const activeChat = chats.find((chat) => chat.id === activeChatId) ?? null;
-
-    async function generateChatTitle(userText, assistantText) {
-        try {
-            const response = await fetch('/api/title', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userText, assistantText }),
-            });
-
-            if (!response.ok) return null;
-
+            const response = await fetch('/api/chats');
+            if (!response.ok) return;
             const data = await response.json();
-            return data.title ?? null;
+            setChats(data.chats.map(toClientChat));
         } catch (error) {
-            console.error('Failed to generate chat title:', error);
-            return null;
+            console.error('Failed to load chats:', error);
         }
-    }
+    }, []);
+
+    // При загрузке и при смене пользователя (вход/выход) чаты другие
+    useEffect(() => {
+        clearActiveChat();
+        setChats([]);
+        loadChats();
+    }, [userId, loadChats, clearActiveChat]);
+
+    const selectChat = useCallback(async (chatId) => {
+        setActive(chatId);
+        setMessages([]);
+        setUpdateChatIcon(chatIcon);
+        try {
+            const response = await fetch(`/api/chats/${chatId}`);
+            if (!response.ok) return;
+            const data = await response.json();
+            if (activeChatIdRef.current !== chatId) return; // пока грузилось, выбрали другой
+            setMessages(data.messages.map(toClientMessage));
+            setUpdateHeaderTitle(data.chat.title);
+        } catch (error) {
+            console.error('Failed to load chat:', error);
+        }
+    }, [setActive]);
 
     const sendMessage = useCallback(async (text) => {
-        console.log(text)
-        const trimmedText = text.trim();
-        if(!trimmedText) return;
+        const trimmed = text.trim();
+        if (!trimmed) return;
 
-        const userMessage = {
-            id: crypto.randomUUID(),
-            role: 'user',
-            text: trimmedText,
-            timestamp: Date.now(),
-            status: 'sent',
-        };
-
-        const targetChatId = activeChatId ?? crypto.randomUUID();
-
-        if (!activeChat) {
-            const newChat = {
-                id: targetChatId,
-                title: trimmedText.slice(0, 40),
-                createdAt: Date.now(),
-                updatedAt: Date.now(),
-                messages: [userMessage],
-            };
-            setChats((prevChats) => [newChat, ...prevChats]);
-            setActiveChatId(targetChatId);
-            setUpdateHeaderTitle(newChat.title);
-            setUpdateChatIcon(chatIcon);
-        } else {
-            setChats((prevChats) =>
-                prevChats.map((chat) =>
-                    chat.id === targetChatId
-                        ? {...chat, messages: [...chat.messages, userMessage], updatedAt: Date.now()}
-                        : chat
-                ))
-        }
-
-        const pendingMessageId = crypto.randomUUID();
-        const pendingMessage = {
-            id: pendingMessageId,
-            role: 'assistant',
-            text: '',
-            timestamp: Date.now(),
-            status: 'pending',
-        }
-
-        setChats((prevChats) =>
-            prevChats.map((chat) =>
-                chat.id === targetChatId
-                    ? {...chat, messages: [...chat.messages, pendingMessage] }
-                    : chat
-            ))
-
-        const messagesForApi = [
-            ...(activeChat?.messages ?? [])
-                .filter((msg) => msg.status !== 'pending' && msg.status !== 'error')
-                .map((msg) => ({
-                role: msg.role,
-                content: msg.text,
-            })),
-            {role: 'user', content: trimmedText},
-        ];
+        let chatId = activeChatIdRef.current;
+        const isNewChat = !chatId;
 
         try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: messagesForApi })
-            })
-            if(!response.ok) {
+            // 1. Если чата ещё нет, создаём его на сервере
+            if (isNewChat) {
+                const created = await fetch('/api/chats', { method: 'POST' });
+                if (!created.ok) return;
+                const data = await created.json();
+                chatId = data.chat.id;
+                setActive(chatId);
+                setUpdateChatIcon(chatIcon);
+                setUpdateHeaderTitle('New Chat');
+            }
+
+            // 2. Сразу показываем сообщение пользователя и заглушку
+            const pendingId = crypto.randomUUID();
+            setMessages((prev) => [
+                ...prev,
+                { id: crypto.randomUUID(), role: 'user', text: trimmed, timestamp: Date.now(), status: 'sent' },
+                { id: pendingId, role: 'assistant', text: '', timestamp: Date.now(), status: 'pending' },
+            ]);
+
+            // Обновление заглушки, только если этот чат всё ещё открыт
+            const updatePending = (patch) => {
+                if (activeChatIdRef.current !== chatId) return;
+                setMessages((prev) => prev.map((m) => (m.id === pendingId ? { ...m, ...patch } : m)));
+            };
+
+            // 3. Отправка на сервер: он сам сохранит, прочитает историю и спросит Grok
+            let response;
+            try {
+                response = await fetch(`/api/chats/${chatId}/messages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: trimmed }),
+                });
+            } catch {
+                updatePending({ status: 'error', text: 'Network error' });
+                return;
+            }
+
+            if (!response.ok) {
                 let errorData = {};
                 try { errorData = await response.json(); } catch { /* пустое тело */ }
 
@@ -132,110 +134,50 @@ const useChats = ({ onLimitReached } = {}) => {
                     errorLabel = 'Too many requests. Wait a minute and try again.';
                 }
 
-                setChats((prevChats) =>
-                    prevChats.map((chat) =>
-                        chat.id === targetChatId
-                            ? {
-                                ...chat,
-                                messages: chat.messages.map((msg) =>
-                                    msg.id === pendingMessageId
-                                        ? { ...msg, status: 'error', text: errorLabel }
-                                        : msg
-                                ),
-                            }
-                            : chat
-                    )
-                );
+                updatePending({ status: 'error', text: errorLabel });
                 if (isLimit && errorData.type === 'guest') onLimitReached?.();
                 return;
             }
 
+            // 4. Успех: подставляем ответ вместо заглушки
             const data = await response.json();
-            const replyText = data.reply;
+            updatePending({ id: data.message.id, text: data.message.content, status: 'sent' });
 
-
-            setChats((prevChats) =>
-                prevChats.map((chat) =>
-                    chat.id === targetChatId
-                        ? {
-                            ...chat,
-                            messages: chat.messages.map((msg) =>
-                                msg.id === pendingMessageId
-                                    ? { ...msg, text: replyText, status: 'sent' }
-                                    : msg
-                            ),
-                            updatedAt: Date.now(),
-                        }
-                        : chat
-                )
-            );
-
-
-            if(!activeChat) {
-                generateChatTitle(trimmedText, replyText).then((generatedTitle) => {
-                    if(!generatedTitle) return;
-
-                    setChats((prevChats) =>
-                        prevChats.map((chat) =>
-                            chat.id === targetChatId
-                                ? {...chat, title: generatedTitle}
-                                : chat
-                        )
-                    )
-                    setUpdateHeaderTitle(generatedTitle);
-                })
-            }
+            // 5. Обновляем список чатов и заголовок
+            setChats((prev) => [
+                { id: chatId, title: data.title, updatedAt: Date.now() },
+                ...prev.filter((c) => c.id !== chatId),
+            ]);
+            if (activeChatIdRef.current === chatId) setUpdateHeaderTitle(data.title);
         } catch (error) {
-            console.error('Failed to get response from Promptly:', error)
-
-            setChats((prevChats) =>
-                prevChats.map((chat) =>
-                    chat.id === targetChatId
-                        ? {
-                            ...chat,
-                            messages: chat.messages.map((msg) =>
-                                msg.id === pendingMessageId
-                                    ? { ...msg, status: 'error', text: 'Network error' }
-                                    : msg
-                            ),
-                        }
-                        : chat
-                )
-            );
+            console.error('Failed to send message:', error);
         }
-    }, [activeChatId, activeChat, onLimitReached])
+    }, [onLimitReached, setActive]);
 
-    const clearActiveChat = useCallback(() => {
-        setActiveChatId(null);
-        setUpdateHeaderTitle('New Chat');
-        setUpdateChatIcon(logo);
-    }, []);
-
-    const selectChat = useCallback((chatId) => {
-        setActiveChatId(chatId);
-        const chat = chats.find((chat) => chat.id === chatId);
-        setUpdateHeaderTitle(chat ? chat.title : "New Chat");
-        setUpdateChatIcon(chatIcon);
-    }, [chats])
-
-    const deleteChat = useCallback((chatId) => {
-        console.log("Deleting");
-        setChats((prevChats) => prevChats.filter((chat) => chat.id !== chatId));
-        setUpdateHeaderTitle('New Chat');
-    }, [])
+    const deleteChat = useCallback(async (chatId) => {
+        if (!chatId) return;
+        try {
+            const response = await fetch(`/api/chats/${chatId}`, { method: 'DELETE' });
+            if (!response.ok && response.status !== 404) return;
+        } catch (error) {
+            console.error('Failed to delete chat:', error);
+            return;
+        }
+        setChats((prev) => prev.filter((c) => c.id !== chatId));
+        if (activeChatIdRef.current === chatId) clearActiveChat();
+    }, [clearActiveChat]);
 
     return {
         chats,
         activeChat,
         activeChatId,
         sendMessage,
-        setActiveChatId,
         clearActiveChat,
         updatedHeaderTitle,
         updatedChatIcon,
         selectChat,
         deleteChat,
     };
-}
+};
 
 export default useChats;
