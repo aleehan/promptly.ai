@@ -193,6 +193,22 @@
     margin-top: 1px;
 }
 
+.message--streaming .message-bubble_content > *:last-child::after {
+    content: '';
+    display: inline-block;
+    width: 7px;
+    height: 14px;
+    margin-left: 3px;
+    vertical-align: -2px;
+    background: currentColor;
+    opacity: 0.6;
+    animation: stream-blink 1s steps(2) infinite;
+}
+
+@keyframes stream-blink {
+    50% { opacity: 0; }
+}
+
 @media (max-width: 768px) {
     .message {
         max-width: 92%;

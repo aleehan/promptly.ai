@@ -73,6 +73,34 @@
     font-size: 10px;
 }
 
+.footer-input_chat_main_stop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 50%;
+    background-color: var(--color-dark);
+    transition: transform var(--transition-duration), opacity var(--transition-duration);
+}
+
+.footer-input_chat_main_stop:hover {
+    opacity: 0.85;
+}
+
+.footer-input_chat_main_stop:active {
+    transform: scale(0.94);
+}
+
+.footer-input_chat_main_stop_square {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background-color: var(--color-white);
+}
+
 @media (max-width: 1023px) {
     .footer-input_chat_title_instructions {
         display: none;
