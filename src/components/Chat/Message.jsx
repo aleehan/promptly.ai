@@ -23,7 +23,7 @@ const Message = (props) => {
 
     return (
         <div
-            className={`message ${isError ? 'message--error' : ''}`}
+            className={`message ${isError ? 'message--error' : ''} ${status === 'streaming' ? 'message--streaming' : ''}`}
             data-role={role}
         >
             <div className="message-bubble">

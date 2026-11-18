@@ -3,7 +3,7 @@ import pool from '../db.js';
 import identify from '../middleware/identify.js';
 import rateLimit from 'express-rate-limit';
 import { consumeQuota, refundQuota } from '../utils/quota.js';
-import { askGrok } from '../utils/grok.js';
+import { askGrok, openGrokStream, readDeltas } from '../utils/grok.js';
 import { SYSTEM_PROMPT, TITLE_SYSTEM_PROMPT } from '../prompts.js';
 
 const MAX_CONTENT_LENGTH = 20000;
@@ -108,28 +108,44 @@ router.delete('/:id', async (req, res) => {
 router.post('/:id/messages', messageLimiter, async (req, res) => {
     let charged = false;
     let userMessageId = null;
+    let streaming = false;
+    let finished = false;
+
+    // Если клиент закрыл соединение (Stop, закрыл вкладку), обрываем запрос к xAI
+    const controller = new AbortController();
+    res.on('close', () => {
+        if (!finished) controller.abort();
+    });
+
+    const send = (event, data) => {
+        if (res.writableEnded || res.destroyed) return;
+        res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+    };
+
+    const rollback = async () => {
+        if (charged) await refundQuota(req.actor).catch(() => {});
+        if (userMessageId) {
+            await pool.query('DELETE FROM messages WHERE id = $1', [userMessageId]).catch(() => {});
+        }
+        charged = false;
+        userMessageId = null;
+    };
 
     try {
         const chatId = req.params.id;
         const content = typeof req.body?.content === 'string' ? req.body.content.trim() : '';
 
-        if (!UUID_RE.test(chatId)) {
-            return res.status(404).json({ error: 'Not found' });
-        }
+        if (!UUID_RE.test(chatId)) return res.status(404).json({ error: 'Not found' });
         if (!content || content.length > MAX_CONTENT_LENGTH) {
             return res.status(400).json({ error: 'Invalid message' });
         }
 
-        // 1. Чат существует и принадлежит этому актору
         const chat = await pool.query(
             `SELECT id, title FROM chats WHERE id = $1 AND ${ownerColumn(req.actor)} = $2`,
             [chatId, req.actor.id]
         );
-        if (!chat.rows[0]) {
-            return res.status(404).json({ error: 'Not found' });
-        }
+        if (!chat.rows[0]) return res.status(404).json({ error: 'Not found' });
 
-        // 2. Квота (атомарно)
         const quota = await consumeQuota(req.actor);
         if (!quota) {
             return res.status(403).json({
@@ -140,15 +156,12 @@ router.post('/:id/messages', messageLimiter, async (req, res) => {
         }
         charged = true;
 
-        // 3. Сохраняем сообщение пользователя
         const inserted = await pool.query(
-            `INSERT INTO messages (chat_id, role, content) VALUES ($1, 'user', $2)
-             RETURNING id`,
+            `INSERT INTO messages (chat_id, role, content) VALUES ($1, 'user', $2) RETURNING id`,
             [chatId, content]
         );
         userMessageId = inserted.rows[0].id;
 
-        // 4. История: последние N успешных сообщений в правильном порядке
         const history = await pool.query(
             `SELECT role, content FROM (
                  SELECT role, content, seq FROM messages
@@ -157,61 +170,92 @@ router.post('/:id/messages', messageLimiter, async (req, res) => {
              ) recent ORDER BY seq`,
             [chatId, HISTORY_LIMIT]
         );
+        const isFirstExchange = history.rows.length === 1;
 
-        // 5. Ответ модели
-        const reply = await askGrok([
-            { role: 'system', content: SYSTEM_PROMPT },
-            ...history.rows,
-        ]);
+        // Открываем поток к xAI. Если не вышло, ответим обычным JSON (заголовки ещё не отправлены)
+        const upstream = await openGrokStream(
+            [{ role: 'system', content: SYSTEM_PROMPT }, ...history.rows],
+            controller.signal
+        );
 
-        // 6. Сохраняем ответ и обновляем чат
+        // С этого момента отвечаем потоком
+        res.status(200).set({
+            'Content-Type': 'text/event-stream; charset=utf-8',
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no',
+        });
+        res.flushHeaders();
+        streaming = true;
+
+        let text = '';
+        try {
+            for await (const piece of readDeltas(upstream)) {
+                text += piece;
+                send('delta', { text: piece });
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') throw error;
+        }
+
+        const aborted = controller.signal.aborted;
+        finished = true;
+
+        // Ничего не пришло: откатываем, как будто запроса не было
+        if (!text.trim()) {
+            await rollback();
+            send('error', { error: aborted ? 'Stopped' : 'Empty response' });
+            return res.end();
+        }
+
+        // Сохраняем то, что успело прийти (даже если пользователь нажал Stop)
         const saved = await pool.query(
             `INSERT INTO messages (chat_id, role, content) VALUES ($1, 'assistant', $2)
              RETURNING id, created_at`,
-            [chatId, reply]
+            [chatId, text]
         );
 
-        // 7. Заголовок и время обновления: необязательно, ошибки не ломают ответ
+        send('done', {
+            message: { id: saved.rows[0].id, content: text, created_at: saved.rows[0].created_at },
+            remaining: quota.limit - quota.used,
+            stopped: aborted,
+        });
+
+        // Заголовок и время обновления: необязательно, ошибки не ломают ответ
         let title = chat.rows[0].title;
         try {
-            if (history.rows.length === 1) {
+            if (isFirstExchange && !aborted) {
                 const generated = await askGrok(
                     [
                         { role: 'system', content: TITLE_SYSTEM_PROMPT },
-                        { role: 'user', content: content },
-                        { role: 'assistant', content: reply },
+                        { role: 'user', content },
+                        { role: 'assistant', content: text },
                     ],
                     { maxTokens: 32 }
                 );
                 if (generated) title = generated.slice(0, 80);
             }
-
             await pool.query(
                 'UPDATE chats SET title = $2, updated_at = now() WHERE id = $1',
                 [chatId, title]
             );
+            if (title !== chat.rows[0].title) send('title', { title });
         } catch (error) {
             console.error('Post-reply update failed:', error);
         }
 
-        res.json({
-            message: { id: saved.rows[0].id, role: 'assistant', content: reply, created_at: saved.rows[0].created_at },
-            title,
-            remaining: quota.limit - quota.used,
-        });
+        res.end();
     } catch (error) {
-        console.error('Send message failed:', error);
+        if (error.name !== 'AbortError') console.error('Send message failed:', error);
+        finished = true;
+        await rollback();
 
-        // Откат: возвращаем запрос и убираем сообщение, на которое нет ответа
-        if (charged) await refundQuota(req.actor).catch(() => {});
-        if (userMessageId) {
-            await pool.query('DELETE FROM messages WHERE id = $1', [userMessageId]).catch(() => {});
-        }
-
-        if (!res.headersSent) {
-            res.status(error.provider ? 502 : 500).json({
-                error: error.provider ? 'AI provider error' : 'Server error',
-            });
+        const message = error.provider ? 'AI provider error' : 'Server error';
+        if (streaming) {
+            send('error', { error: message });
+            res.end();
+        } else if (!res.headersSent) {
+            res.status(error.provider ? 502 : 500).json({ error: message });
         }
     }
 });

@@ -8,9 +8,11 @@ const MessageList = (props) => {
 
     const bottomRef = useRef(null);
 
+    const last = messages[messages.length - 1];
+
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages.length])
+        bottomRef.current?.scrollIntoView({ behavior: last?.status === 'streaming' ? 'auto' : 'smooth' });
+    }, [messages.length, last?.text]);
 
     return (
         <div id="messagesList" className="chat_messages">

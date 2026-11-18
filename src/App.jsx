@@ -25,6 +25,7 @@ const App = () => {
     const {
         chats, activeChat, activeChatId, sendMessage, updatedHeaderTitle,
         clearActiveChat, updatedChatIcon, selectChat, deleteChat,
+        isGenerating, stopGeneration,
     } = useChats({
         onLimitReached: () => openAuth('register'),
         userId: user?.id ?? null,
@@ -107,7 +108,7 @@ const App = () => {
                     <WelcomeScreen onSuggestionClick={sendMessage} />
                 )}
 
-                <Footer onSend={sendMessage} />
+                <Footer onSend={sendMessage} isGenerating={isGenerating} onStop={stopGeneration} />
             </div>
             {authModal && (
                 <AuthModal
